@@ -1,26 +1,34 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { z } from "zod";
+import { z, ZodType } from "zod";
 import BASE_URL from "../../../../../utils/config";
 
-const productSchema = z.object({
-  productName: z.string(),
-  productPrice: z.number(),
-  productDesc: z.string(),
-});
-type productType = z.infer<typeof productSchema>;
+type productType = {
+  productName: string;
+  productPrice: number;
+  productDesc: string;
+};
 
 type propsType = {
   refetch: () => void;
 };
 
 const Sidebar = ({ refetch }: propsType) => {
+  const productSchema: ZodType<productType> = z.object({
+    productName: z.string().min(2, { message: "Minimum length is 2" }),
+    productPrice: z.number().min(1, { message: "Product price is required" }),
+    productDesc: z
+      .string()
+      .min(1, { message: "Product description is required" }),
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<productType>();
+  } = useForm<productType>({ resolver: zodResolver(productSchema) });
 
   const onSubmit = (data: productType) => {
     console.log(data);
@@ -40,9 +48,7 @@ const Sidebar = ({ refetch }: propsType) => {
           <div className="flex flex-col">
             <input
               type="text"
-              {...register("productName", {
-                required: "Product name is required",
-              })}
+              {...register("productName")}
               placeholder="Product name"
               className="p-3 text-xs rounded-md mt-3 outline-none"
             />
@@ -53,7 +59,6 @@ const Sidebar = ({ refetch }: propsType) => {
             <input
               type="number"
               {...register("productPrice", {
-                required: "Product price is required",
                 valueAsNumber: true,
               })}
               placeholder="Product price"
@@ -64,9 +69,7 @@ const Sidebar = ({ refetch }: propsType) => {
             </span>
 
             <textarea
-              {...register("productDesc", {
-                required: "Product description is required",
-              })}
+              {...register("productDesc")}
               placeholder="Product description"
               className="h-32 text-xs p-3 rounded-md mt-3 outline-none"
             />
